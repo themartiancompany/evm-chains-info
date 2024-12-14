@@ -191,7 +191,7 @@ _db_get(){
     cat \
       "${_db_path}" | \
       jq \
-        "${_filter}" || \
+        "${_filter}" 2&>/dev/null || \
       true)"
   if [[ "${_results_string}" == "" ]]; then
     _msg=(
