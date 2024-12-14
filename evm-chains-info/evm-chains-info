@@ -29,9 +29,9 @@ _global_variables() {
 _requirements() {
   _check_cmd \
     "jq"
-  _check_cmd \
-    'evm-contract-call' \
-    'evm-contract-tools'
+  # _check_cmd \
+  #   'evm-contract-call' \
+  #   'evm-contract-tools'
   _check_cmd \
     "shuf" \
     "coreutils"
@@ -58,6 +58,108 @@ _dequote() {
     "${_string:1:-1}"
 }
 
+_filter_by_get() {
+ local \
+   _key="${1}" \
+   _value="${2}"
+  _filter=(
+    ".[] |"
+      "select("
+        ".${_key} == ${_value} )"
+  )
+  echo \
+    "${_filter[*]}"
+}
+
+_filter_get() {
+  local \
+    _key="${1}" \
+    _value="${2}" \
+    _output_type="${3}"
+  echo \
+    "$(_filter_by \
+         "${_key}" \
+         "${_value}").${_output_type}"
+}
+
+_filter_rpc_no_api_key_get() {
+  local \
+    _filter=()
+  _filter=(
+      ".[] |"
+        "select("
+          "contains("
+            "\"API_KEY\" ) |"
+            "not)"
+  )
+  echo \
+    "${_filter[*]}"
+}
+
+_rpc_filter_api_key() {
+  local \
+    _rpcs_string="${1}" \
+    _api_key="${2}" \
+    _filter
+  if [[ "${_api_key}" == "y" ]]; then
+    _rpcs=( $( \
+      echo \
+        "${_rpcs_string}" | \
+        jq \
+          -c \
+          ".[]")
+    )
+  elif [[ "${_api_key}" == "n" ]]; then
+    _filter="$( \
+      _filter_no_api_key_get)"
+    readarray -t _rpcs <<< "$( \
+      echo \
+        "${_rpcs_string}" | \
+        jq \
+          -c \
+          "${_filter}")"
+  fi
+}
+
+_rpc_select() {
+  local \
+    _selection_method="${1}" \
+    _rpcs=() \
+    _index \
+    _length
+  shift \
+    1
+  _rpcs=(
+    "$@"
+  )
+  if [[ "${_selection_method}" == "kirsh" ]]; then
+    _index="0"
+  elif [[ "${_selection_method}" == "random" ]]; then
+    _length="${#_rpcs[@]}"
+    _index="$( \
+      shuf \
+        -i \
+          "0-$((${_length} -1))" \
+        -n \
+          1)"
+  fi
+  _dequote \
+    "${_rpcs[${_index}]}"
+}
+
+_rpc_get() {
+  local \
+    _rpcs_string="${1}" \
+    _api_key="${2}" \
+    _selection_method="${3}"
+  _rpc_api_key_filter \
+    "${_rpcs_string}" \
+    "${_api_key}"
+  _rpc_select \
+    "${_selection_method}" \
+    "${_rpcs[@]}"
+}
+
 _db_get(){
   local \
     _db_path="${1}" \
@@ -66,62 +168,36 @@ _db_get(){
     _selection_method="${4}" \
     _api_key="${5}" \
     _target_chain="${6}" \
-    _filter=() \
-    _filter_no_api_key=() \
+    _filter \
     _rpcs=() \
     _length \
     _index \
     _cmd=()
-  if [[ "${_input_type}" == "id" ]]  && \
-     [[ "${_output_type}" == "rpc" ]]; then
-    _filter=(
-      ".[] |"
-        "select("
-          ".chainId == ${_target_chain} ).${_output_type}"
-    )
-    _rpcs_string="$( \
-      cat \
-        "${_db_path}" | \
-        jq \
-          "${_filter[*]}")"
-    if [[ "${_api_key}" == "y" ]]; then
-      _rpcs=( $( \
-        echo \
-          "${_rpcs_string}" | \
-          jq \
-            -c \
-            ".[]")
-      )
-    elif [[ "${_api_key}" == "n" ]]; then
-      _filter_no_api_key=(
-        ".[] |"
-          "select("
-            "contains("
-              "\"API_KEY\" ) |"
-              "not)"
-      )
-      readarray -t _rpcs <<< "$( \
-        echo \
-          "${_rpcs_string}" | \
-          jq \
-            -c \
-            "${_filter_no_api_key[*]}")"
-    fi
-    echo \
-      "rpcs: ${_rpcs[*]}"
-    if [[ "${_selection_method}" == "kirsh" ]]; then
-      _index="0"
-    elif [[ "${_selection_method}" == "random" ]]; then
-      _length="${#_rpcs[@]}"
-      _index="$( \
-        shuf \
-          -i \
-            "0-$((${_length} -1))" \
-          -n \
-            1)"
-    fi
-    _dequote \
-      "${_rpcs[${_index}]}"
+  if [[ "${_input_type}" == "id" ]]; then
+    _filter_key="chainId"
+    _filter_value="${_target_chain}"
+  elif [[ "${_input_type}" == "name" ]]; then
+    _filter_key="name"
+    _filter_value="\"${_target_chain}\""
+  fi
+  _filter="$( \
+    _filter_get \
+      "${_filter_key}" \
+      "${_filter_value}" \
+      "${_output_type}")"
+  _results_string="$( \
+    cat \
+      "${_db_path}" | \
+      jq \
+        "${_filter}")"
+  if [[ "${_output_type}" == "rpc" ]]; then
+    _rpc_get \
+      "${_results_string}" \
+      "${_api_key}" \
+      "${_selection_method}"
+  elif [[ "${_output_type}" == "name" ]]; then
+  _dequote \
+    "${_results_string}"
   fi
 }
 
