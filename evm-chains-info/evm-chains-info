@@ -170,9 +170,7 @@ _db_get(){
     _target_chain="${6}" \
     _filter \
     _rpcs=() \
-    _length \
-    _index \
-    _cmd=()
+    _msg=()
   _filter_output_type="${_output_type}"
   if [[ "${_input_type}" == "id" ]]; then
     _filter_key="chainId"
@@ -193,7 +191,17 @@ _db_get(){
     cat \
       "${_db_path}" | \
       jq \
-        "${_filter}")"
+        "${_filter}" || \
+      true)"
+  if [[ "${_results_string}" == "" ]]; then
+    _msg=(
+      "found no results for"
+      "'${_filter_key}' == '${_filter_value}'"
+    )
+    _msg_error \
+      "${_msg[*]}" \
+      1
+  fi
   if [[ "${_output_type}" == "rpc" ]]; then
     _rpc_get \
       "${_results_string}" \
