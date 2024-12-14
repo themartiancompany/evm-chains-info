@@ -19,6 +19,8 @@ _global_variables() {
   output_type=""
   retrieval_mode=""
   db_path=""
+  selection_method=""
+  api_key=""
   target_chain=""
   color=""
   quiet=""
@@ -30,6 +32,9 @@ _requirements() {
   _check_cmd \
     'evm-contract-call' \
     'evm-contract-tools'
+  _check_cmd \
+    "shuf" \
+    "coreutils"
 }
 
 _db_path_check() {
@@ -47,12 +52,77 @@ _db_path_check() {
   fi
 }
 
+_dequote() {
+  _string="${1}"
+  echo \
+    "${_string:1:-1}"
+}
+
 _db_get(){
+  local \
     _db_path="${1}" \
     _input_type="${2}" \
     _output_type="${3}" \
-    _target_chain="${4}"
-  echo "ciao jq"
+    _selection_method="${4}" \
+    _api_key="${5}" \
+    _target_chain="${6}" \
+    _filter=() \
+    _filter_no_api_key=() \
+    _rpcs=() \
+    _length \
+    _index \
+    _cmd=()
+  if [[ "${_input_type}" == "id" ]]  && \
+     [[ "${_output_type}" == "rpc" ]]; then
+    _filter=(
+      ".[] |"
+        "select("
+          ".chainId == ${_target_chain} ).${_output_type}"
+    )
+    _rpcs_string="$( \
+      cat \
+        "${_db_path}" | \
+        jq \
+          "${_filter[*]}")"
+    if [[ "${_api_key}" == "y" ]]; then
+      _rpcs=( $( \
+        echo \
+          "${_rpcs_string}" | \
+          jq \
+            -c \
+            ".[]")
+      )
+    elif [[ "${_api_key}" == "n" ]]; then
+      _filter_no_api_key=(
+        ".[] |"
+          "select("
+            "contains("
+              "\"API_KEY\" ) |"
+              "not)"
+      )
+      readarray -t _rpcs <<< "$( \
+        echo \
+          "${_rpcs_string}" | \
+          jq \
+            -c \
+            "${_filter_no_api_key[*]}")"
+    fi
+    echo \
+      "rpcs: ${_rpcs[*]}"
+    if [[ "${_selection_method}" == "kirsh" ]]; then
+      _index="0"
+    elif [[ "${_selection_method}" == "random" ]]; then
+      _length="${#_rpcs[@]}"
+      _index="$( \
+        shuf \
+          -i \
+            "0-$((${_length} -1))" \
+          -n \
+            1)"
+    fi
+    _dequote \
+      "${_rpcs[${_index}]}"
+  fi
 }
 
 _evm_chains_info() {
@@ -61,9 +131,11 @@ _evm_chains_info() {
     _output_type="${2}" \
     _retrieval_mode="${3}" \
     _db_path="${4}" \
-    _target_chain="${5}"
+    _selection_method="${5}" \
+    _api_key="${6}" \
+    _target_chain="${7}"
   shift \
-    5
+    7
   _opts+=(
     "$@"
   )
@@ -74,6 +146,8 @@ _evm_chains_info() {
       "${_db_path}" \
       "${_input_type}" \
       "${_output_type}" \
+      "${_selection_method}" \
+      "${_api_key}" \
       "${_target_chain}"
   elif [[ "${_retrieval_mode}" != "offline" ]]; then
     _msg=(
@@ -97,13 +171,13 @@ _db_path_auto_detect() {
   _chains="evm-chains/chains.json"
   _db="${_lib}/${_chains}"
   if [[ ! -e "${_db}" ]]; then
+    _db_user="${HOME}/.config/${_chains}"
     _msg=(
       "System database '${_db}'"
       "not found, trying '${_db_user}'"
     )
     _msg_info \
       "${_msg[*]}"
-    _db_user="${HOME}/.config/${_chains}"
     if [[ ! -e "${_db_user}" ]]; then
      _msg=(
        "User database '${_db_user}'"
@@ -148,6 +222,14 @@ _set_overrides() {
     "retrieval" \
     "mode" \
     "offline"
+  _set_override \
+    "selection" \
+    "method" \
+    "kirsh"
+  _set_override \
+    "api" \
+    "key" \
+    "n"
   _db_path_auto_detect
 }
 
@@ -171,21 +253,29 @@ Usage:
     <target_chain]
 
   options:
-     -i <input_type>      Input type. It can be 'id' or 'name'
-                          Default: '$(_get "input" "type")'
-     -o <output_type>     Output type. It can be 'id', 'name'
-                          or 'rpc'.
-                          Default: '$(_get "output" "type")'
-     -m <retrieval_mode>  It can be 'offline'.
-                          Default: '$(_get "evm" "version")'
-     -d <db_path>         Path of the chains' info json file
-                          to be used for 'offline' retrieval
-                          mode.
-                          Default: '$(_get "db" "path")'
+     -i <input_type>        Input type. It can be 'id' or 'name'
+                            Default: '$(_get "input" "type")'
+     -o <output_type>       Output type. It can be 'id', 'name'
+                            or 'rpc'.
+                            Default: '$(_get "output" "type")'
+     -m <retrieval_mode>    It can be 'offline'.
+                            Default: '$(_get "retrieval" "mode")'
+     -d <db_path>           Path of the chains' info json file
+                            to be used for 'offline' retrieval
+                            mode.
+                            Default: '$(_get "db" "path")'
+     -s <selection_method>  When output type is 'rpc', 
+                            selection criterion to use when
+                            more than one is available.
+                            It can be 'kirsh' or 'random'.
+                            Default: '$(_get "selection" "method")'
+     -k                     Whether to include, when output type
+                            is 'rpc', the ones requiring an api key.
+                            Default: '$(_get "api" "key")'
 
-     -h                   This message.
-     -c                   Enable color output
-     -v                   Enable verbose output
+     -h                     This message.
+     -c                     Enable color output
+     -v                     Enable verbose output
 ENDUSAGETEXT
   _printf \
     '%s\n' \
@@ -202,6 +292,8 @@ _show_config() {
   _msg_info "              Output type:   $(_get "output" "type")"
   _msg_info "           Retrieval mode:   $(_get "retrieval" "mode")"
   _msg_info "            Database path:   $(_get "db" "path")"
+  _msg_info "                  API Key:   $(_get "api" "key")"
+  _msg_info "     RPC selection method:   $(_get "selection" "method")"
   _msg_info "             Target chain:   $(_get "target" "chain")"
 }
 
@@ -211,7 +303,7 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'i:o:m:d:cvh?' \
+    'i:o:m:d:s:kcvh?' \
     arg; do
   case \
     "${arg}" in
@@ -219,6 +311,8 @@ while \
     o) override_output_type="${OPTARG}" ;;
     m) override_retrieval_mode="${OPTARG}" ;;
     d) override_db_path="${OPTARG}" ;;
+    s) override_selection_method="${OPTARG}" ;;
+    k) override_api_key="y" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
     h|?) _set_overrides && \
@@ -245,6 +339,10 @@ if (( $# < 1)); then
   _usage \
     1
 fi
+_set \
+  "target" \
+  "chain" \
+  "${1}"
 _set_overrides
 _config_user_init \
   "$( \
@@ -265,6 +363,12 @@ app_opts=(
   "$(_get \
        "db" \
        "path")"
+  "$(_get \
+       "selection" \
+       "method")"
+  "$(_get \
+       "api" \
+       "key")"
   "$(_get \
        "target" \
        "chain")"
