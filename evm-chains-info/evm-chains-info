@@ -77,7 +77,7 @@ _filter_get() {
     _value="${2}" \
     _output_type="${3}"
   echo \
-    "$(_filter_by \
+    "$(_filter_by_get \
          "${_key}" \
          "${_value}").${_output_type}"
 }
@@ -111,7 +111,7 @@ _rpc_filter_api_key() {
     )
   elif [[ "${_api_key}" == "n" ]]; then
     _filter="$( \
-      _filter_no_api_key_get)"
+      _filter_rpc_no_api_key_get)"
     readarray -t _rpcs <<< "$( \
       echo \
         "${_rpcs_string}" | \
@@ -152,7 +152,7 @@ _rpc_get() {
     _rpcs_string="${1}" \
     _api_key="${2}" \
     _selection_method="${3}"
-  _rpc_api_key_filter \
+  _rpc_filter_api_key \
     "${_rpcs_string}" \
     "${_api_key}"
   _rpc_select \
@@ -173,6 +173,7 @@ _db_get(){
     _length \
     _index \
     _cmd=()
+  _filter_output_type="${_output_type}"
   if [[ "${_input_type}" == "id" ]]; then
     _filter_key="chainId"
     _filter_value="${_target_chain}"
@@ -180,11 +181,14 @@ _db_get(){
     _filter_key="name"
     _filter_value="\"${_target_chain}\""
   fi
+  if [[ "${_output_type}" == "id" ]]; then
+    _filter_output_type="chainId"
+  fi
   _filter="$( \
     _filter_get \
       "${_filter_key}" \
       "${_filter_value}" \
-      "${_output_type}")"
+      "${_filter_output_type}")"
   _results_string="$( \
     cat \
       "${_db_path}" | \
@@ -198,6 +202,9 @@ _db_get(){
   elif [[ "${_output_type}" == "name" ]]; then
   _dequote \
     "${_results_string}"
+  elif [[ "${_output_type}" == "id" ]]; then
+    echo \
+      "${_results_string}"
   fi
 }
 
