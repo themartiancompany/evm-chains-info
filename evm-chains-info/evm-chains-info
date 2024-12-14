@@ -187,12 +187,20 @@ _db_get(){
       "${_filter_key}" \
       "${_filter_value}" \
       "${_filter_output_type}")"
+  if [[ "${quiet}" == "n" ]]; then
+    _results_string="$( \
+      cat \
+        "${_db_path}" | \
+        jq \
+          "${_filter}")"
+  elif [[ "${quiet}" == "y" ]]; then
   _results_string="$( \
     cat \
       "${_db_path}" | \
       jq \
-        "${_filter}" 2&>/dev/null || \
+        "${_filter}" 2>/dev/null || \
       true)"
+  fi
   if [[ "${_results_string}" == "" ]]; then
     _msg=(
       "found no results for"
