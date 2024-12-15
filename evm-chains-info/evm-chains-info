@@ -121,15 +121,15 @@ _rpc_filter_api_key() {
   fi
 }
 
-_rpc_select() {
+_select() {
   local \
     _selection_method="${1}" \
-    _rpcs=() \
+    _results=() \
     _index \
     _length
   shift \
     1
-  _rpcs=(
+  _results=(
     "$@"
   )
   if [[ "${_selection_method}" == "kirsh" ]]; then
@@ -144,7 +144,7 @@ _rpc_select() {
           1)"
   fi
   _dequote \
-    "${_rpcs[${_index}]}"
+    "${_results[${_index}]}"
 }
 
 _rpc_get() {
@@ -155,9 +155,26 @@ _rpc_get() {
   _rpc_filter_api_key \
     "${_rpcs_string}" \
     "${_api_key}"
-  _rpc_select \
+  _select \
     "${_selection_method}" \
     "${_rpcs[@]}"
+}
+
+_explorers_get() {
+  local \
+    _explorers_string="${1}" \
+    _explorers=() \
+    _explorer
+  _explorers=( $( \
+    echo \
+      "${_explorers_string}" | \
+      jq \
+        ".[].url")
+  )
+  for _explorer in "${_explorers[@]}"; do
+    _dequote \
+      "${_explorer}"
+  done
 }
 
 _db_get(){
@@ -215,6 +232,9 @@ _db_get(){
       "${_results_string}" \
       "${_api_key}" \
       "${_selection_method}"
+  elif [[ "${_output_type}" == "explorers" ]]; then
+    _explorers_get \
+      "${_results_string}"
   elif [[ "${_output_type}" == "name" ]]; then
   _dequote \
     "${_results_string}"
@@ -352,10 +372,10 @@ Usage:
     <target_chain]
 
   options:
-     -i <input_type>        Input type. It can be 'id' or 'name'
+     -i <input_type>        Input type. It can be 'id' or 'name'.
                             Default: '$(_get "input" "type")'
-     -o <output_type>       Output type. It can be 'id', 'name'
-                            or 'rpc'.
+     -o <output_type>       Output type. It can be 'id', 'name',
+                            'rpc', 'explorers'.
                             Default: '$(_get "output" "type")'
      -m <retrieval_mode>    It can be 'offline'.
                             Default: '$(_get "retrieval" "mode")'
