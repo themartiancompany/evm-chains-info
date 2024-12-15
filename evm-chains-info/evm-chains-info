@@ -135,7 +135,7 @@ _select() {
   if [[ "${_selection_method}" == "kirsh" ]]; then
     _index="0"
   elif [[ "${_selection_method}" == "random" ]]; then
-    _length="${#_rpcs[@]}"
+    _length="${#_results[@]}"
     _index="$( \
       shuf \
         -i \
@@ -385,7 +385,7 @@ Returns info about EVM blockchains.
 Usage:
   $(_get "app" "name")
     [options]
-    <target_chain]
+    <target_chain>
 
   options:
      -i <input_type>        Input type. It can be 'id' or 'name'.
