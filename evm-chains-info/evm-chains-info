@@ -314,6 +314,25 @@ _db_path_auto_detect() {
    "${_db}"
 }
 
+_input_type_auto_detect() {
+  local \
+    _chain
+  _chain="$( \
+    _get \
+      "target" \
+      "chain")"
+  _number='^[0-9]+$'
+  if [[ "${_chain}" =~ ${_number} ]] ; then
+    _input_type="id"
+  elif [[ ! "${_chain}" =~ "${_number}" ]] ; then
+    _input_type="name"
+  fi
+  _set_override \
+    "input" \
+    "type" \
+    "${_input_type}"
+}
+
 _set_overrides() {
   if [[ -v override_quiet ]]; then
     quiet="${override_quiet}"
@@ -329,10 +348,7 @@ _set_overrides() {
     "get" \
     "date" \
     "$(_get_date_human)"
-  _set_override \
-    "input" \
-    "type" \
-    "id"
+  _input_type_auto_detect
   _set_override \
     "output" \
     "type" \
