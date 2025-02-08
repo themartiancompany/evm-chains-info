@@ -326,10 +326,7 @@ _db_path_auto_detect() {
 _input_type_auto_detect() {
   local \
     _chain
-  _chain="$( \
-    _get \
-      "target" \
-      "chain")"
+  _chain="${target_chain}"
   _number='^[0-9]+$'
   if [[ "${_chain}" =~ ${_number} ]] ; then
     _input_type="id"
@@ -398,25 +395,25 @@ Usage:
 
   options:
      -i <input_type>        Input type. It can be 'id' or 'name'.
-                            Default: '$(_get "input" "type")'
+                            Default: '${input_type}"'
      -o <output_type>       Output type. It can be 'id', 'name',
                             'rpc', 'explorers'.
-                            Default: '$(_get "output" "type")'
+                            Default: '${output_type}'
      -m <retrieval_mode>    It can be 'offline'.
-                            Default: '$(_get "retrieval" "mode")'
+                            Default: '${retrieval_mode}'
      -d <db_path>           Path of the chains' info json file
                             to be used for 'offline' retrieval
                             mode.
-                            Default: '$(_get "db" "path")'
+                            Default: '${db_path}'
      -s <selection_method>  When output type is 'rpc', 
                             selection criterion to use when
                             more than one is available.
                             It can be 'kirsh', 'random' or
                             'all'.
-                            Default: '$(_get "selection" "method")'
+                            Default: '${selection_method}'
      -k                     Whether to include, when output type
                             is 'rpc', the ones requiring an api key.
-                            Default: '$(_get "api" "key")'
+                            Default: '${api_key}'
 
      -h                     This message.
      -c                     Enable color output
@@ -432,14 +429,14 @@ ENDUSAGETEXT
 # Shows configuration options.
 _show_config() {
   _msg_info "${app_name} configuration"
-  _msg_info "                 Get date:   $(_get "get" "date")"
-  _msg_info "               Input type:   $(_get "input" "type")"
-  _msg_info "              Output type:   $(_get "output" "type")"
-  _msg_info "           Retrieval mode:   $(_get "retrieval" "mode")"
-  _msg_info "            Database path:   $(_get "db" "path")"
-  _msg_info "                  API Key:   $(_get "api" "key")"
-  _msg_info "     RPC selection method:   $(_get "selection" "method")"
-  _msg_info "             Target chain:   $(_get "target" "chain")"
+  _msg_info "                 Get date:   ${get_date}"
+  _msg_info "               Input type:   ${input_type}"
+  _msg_info "              Output type:   ${output_type}"
+  _msg_info "           Retrieval mode:   ${retrieval_mode}"
+  _msg_info "            Database path:   ${db_path}"
+  _msg_info "                  API Key:   ${api_key}"
+  _msg_info "     RPC selection method:   ${selection_method}"
+  _msg_info "             Target chain:   ${target_chain}"
 }
 
 _globals
@@ -491,27 +488,13 @@ _set \
 _set_overrides
 _show_config
 app_opts=(
-  "$(_get \
-       "input" \
-       "type")"
-  "$(_get \
-       "output" \
-       "type")"
-  "$(_get \
-       "retrieval" \
-       "mode")"
-  "$(_get \
-       "db" \
-       "path")"
-  "$(_get \
-       "selection" \
-       "method")"
-  "$(_get \
-       "api" \
-       "key")"
-  "$(_get \
-       "target" \
-       "chain")"
+  "${input_type}"
+  "${output_type}"
+  "${retrieval_mode}"
+  "${db_path}"
+  "${selection_method}"
+  "${api_key}"
+  "${target_chain}"
 )
 _evm_chains_info \
   "${app_opts[@]}"
