@@ -289,14 +289,28 @@ _evm_chains_info() {
   if [[ "${_retrieval_mode}" == "offline" ]]; then
     _db_path_check \
       "${_db_path}"
-    _db_get \
-      "${_db_path}" \
-      "${_input_type}" \
-      "${_output_type}" \
-      "${_selection_method}" \
-      "${_api_key}" \
-      "${_target_chain}"
-  elif [[ "${_retrieval_mode}" != "offline" ]]; then
+    if [[ "${_input_type}" != "amount" ]]; then
+      _db_get \
+        "${_db_path}" \
+        "${_input_type}" \
+        "${_output_type}" \
+        "${_selection_method}" \
+        "${_api_key}" \
+        "${_target_chain}"
+    elif [[ "${_input_type}" == "amount" ]]; then
+      cat \
+        "${_db_path}" | \
+        jq \
+          '. | length'
+    fi
+  elif [[ "${_retrieval_mode}" == "online" ]]; then
+    _msg=(
+      "Not implemented."
+    )
+    _msg_error \
+      "${_msg[*]}" \
+      1
+  else
     _msg=(
       "unknown retrieval mode '${_retrieval_mode}'."
     )
@@ -413,7 +427,8 @@ Usage:
     <target_chain>
 
   options:
-     -i <input_type>        Input type. It can be 'id' or 'name'.
+     -i <input_type>        Input type. It can be 'id' or 'name',
+                            'amount'.
                             Default: '${input_type}"'
      -o <output_type>       Output type. It can be 'id', 'name',
                             'rpc', 'explorers'.
@@ -492,18 +507,29 @@ shift \
   $(( \
     OPTIND - 1 \
   ))
-if (( $# < 1)); then
-  _msg_error \
-    "no chain identifier given", \
-    0
-  _set_overrides
-  _usage \
-    1
+_argument_required="true"
+if (( $# < 1 )); then
+  if [[ -v "override_input_type" ]]; then
+    if [[ "${override_input_type}" == "amount" ]]; then
+      _argument_required="false"
+      true
+    fi
+  fi
+  if [[ "${_argument_required}" == "true" ]]; then
+    _msg_error \
+      "no chain identifier given", \
+      0
+    _set_overrides
+    _usage \
+      1
+  fi
 fi
-_set \
-  "target" \
-  "chain" \
-  "${1}"
+if [[ "${_argument_required}" == "true" ]]; then
+  _set \
+    "target" \
+    "chain" \
+    "${1}"
+fi
 _set_overrides
 _show_config
 app_opts=(
