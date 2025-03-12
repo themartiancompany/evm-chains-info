@@ -75,7 +75,7 @@ function
 }
 
 function
-  _chain_info_get(
+  _evm_chain_info_get(
     _chain_id,
     _chain_info,
     _db_path) {
@@ -129,7 +129,7 @@ function
       "kirsh";
   }
   _chain_info =
-    _chain_info_get(
+    _evm_chain_info_get(
       _chain_id,
       _db_path);
   if ( _selection_method == "kirsh" ) {
@@ -145,8 +145,8 @@ function
 module.exports = {
   _evm_chains_db_path_get:
     _evm_chains_db_path_get,
-  _chain_info_get:
-    _chain_info_get,
+  _evm_chain_info_get:
+    _evm_chain_info_get,
   _rpc_backend_get:
     _rpc_backend_get
 };
