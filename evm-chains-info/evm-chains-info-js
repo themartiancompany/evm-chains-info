@@ -121,13 +121,18 @@ function
       "Network's ChainID not specified.",
       1);
   }
-  _chain_id =
-    Number(
-      _network_chain_id);
   if ( _selection_method == undefined ) {
     _selection_method =
       "kirsh";
   }
+  if ( _db_path == undefined ) {
+    _db_path =
+      _evm_chains_db_path_get(
+        false);
+  }
+  _chain_id =
+    Number(
+      _network_chain_id);
   _chain_info =
     _evm_chain_info_get(
       _chain_id,
