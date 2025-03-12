@@ -1,0 +1,153 @@
+#!/usr/bin/env node
+
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+//    ----------------------------------------------------------------------
+//    Copyright © 2025  Pellegrino Prevete
+//
+//    All rights reserved
+//    ----------------------------------------------------------------------
+//
+//    This program is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU Affero General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU Affero General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+const
+  _libcrash =
+    require(
+      '../libcrash-js/crash-js');
+_file_exists =
+  _libcrash._file_exists;
+_json_read =
+  _libcrash._json_read;
+_path_join =
+  _libcrash._path_join;
+
+function
+  _evm_chains_db_path_get(
+    _user) {
+  let
+    _db_exists,
+    _path;
+  if ( _user == undefined ) {
+    _user =
+      false;
+  }
+  if ( _user == true ) {
+    _path =
+      _path_join(
+        [process.env.HOME,
+	 ".local",
+	 "share",
+         "evm-chains",
+	 "chains.json"])
+    _db_exists =
+      _file_exists(
+        _db_path);
+    if ( _db_exists == false ) {
+      _user =
+        false;
+    }
+  }
+  if ( _user == false ) {
+    _path =
+      _path_join(
+        [process.env.NODE_PATH,
+	 "..",
+         "evm-chains",
+	 "chains.json"])
+  }
+  else {
+    _msg_error(
+      "Input variable '_user' must be a boolean",
+      0);
+  }
+  return _path;
+}
+
+function
+  _network_info_get(
+    _chain_id,
+    _db_path) {
+  let
+    _db,
+    _db_exists;
+  if ( _db_path == undefined ) {
+    _db_path =
+      _evm_chains_db_path_get(
+        false);
+  }
+  _db_exists =
+    _file_exists(
+      _db_path);
+  if ( _db_exists == false ) {
+    _msg_error(
+      "Database file does not exists.",
+      1);
+  }
+  _db =
+    _json_read(
+      _db_path);
+  for ( _network of _db) {
+    if ( _network["chainId"] == _chain_id ) {
+      _target_network =
+        _network;
+      return _target_network;
+    }
+  }
+  _msg_error(
+    "Network not found.",
+    1);
+}
+
+function
+  _rpc_backend_get(
+    _network_chain_id,
+    _selection_method,
+    _db_path) {
+  let
+    _chain_id,
+    _network;
+  if ( _network_chain_id == undefined ) {
+    _msg_error(
+      "Network not specified.",
+      1);
+  }
+  _chain_id =
+    Number(
+      _network_chain_id);
+  if ( _selection_method == undefined ) {
+    _selection_method =
+      "kirsh";
+  }
+  _network =
+    _network_info_get(
+      _chain_id,
+      _db_path);
+  if ( _selection_method == "kirsh" ) {
+    return _target_network["rpc"][0];
+  }
+  else {
+    _msg_error(
+      "Unknown selection method",
+      1);
+  }
+}
+
+module.exports = {
+  _evm_chains_db_path_get:
+    _evm_chains_db_path_get,
+  _network_info_get:
+    _network_info_get,
+  _rpc_backend_get:
+    _rpc_backend_get
+};
