@@ -75,8 +75,9 @@ function
 }
 
 function
-  _network_info_get(
+  _chain_info_get(
     _chain_id,
+    _chain_info,
     _db_path) {
   let
     _db,
@@ -97,11 +98,9 @@ function
   _db =
     _json_read(
       _db_path);
-  for ( _network of _db) {
-    if ( _network["chainId"] == _chain_id ) {
-      _target_network =
-        _network;
-      return _target_network;
+  for ( _chain_info of _db) {
+    if ( _chain_info["chainId"] == _chain_id ) {
+      return _chain_info;
     }
   }
   _msg_error(
@@ -116,10 +115,10 @@ function
     _db_path) {
   let
     _chain_id,
-    _network;
+    _chain_info;
   if ( _network_chain_id == undefined ) {
     _msg_error(
-      "Network not specified.",
+      "Network's ChainID not specified.",
       1);
   }
   _chain_id =
@@ -129,12 +128,12 @@ function
     _selection_method =
       "kirsh";
   }
-  _network =
-    _network_info_get(
+  _chain_info =
+    _chain_info_get(
       _chain_id,
       _db_path);
   if ( _selection_method == "kirsh" ) {
-    return _target_network["rpc"][0];
+    return _chain_info["rpc"][0];
   }
   else {
     _msg_error(
@@ -146,8 +145,8 @@ function
 module.exports = {
   _evm_chains_db_path_get:
     _evm_chains_db_path_get,
-  _network_info_get:
-    _network_info_get,
+  _chain_info_get:
+    _chain_info_get,
   _rpc_backend_get:
     _rpc_backend_get
 };
