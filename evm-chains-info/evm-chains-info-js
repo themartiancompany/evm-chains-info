@@ -104,7 +104,7 @@ function
     }
   }
   _msg_error(
-    "Network not found.",
+    `Network '${_chain_id}' not found.`,
     1);
 }
 
