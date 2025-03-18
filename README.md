@@ -36,6 +36,11 @@ and it includes a JavaScript library used
 by [libEVM](
   https://github.com/themartiancompany/libevm).
 
+It is written and depends on the
+[Crash Bash](
+  https://github.com/themartiancompany/crash-bash)
+library.
+
 ## Installation
 
 The program in this source repo
