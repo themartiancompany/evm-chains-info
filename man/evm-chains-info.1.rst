@@ -49,24 +49,32 @@ Options
 
 -i input_type           Input type. It can be 'id' or 'name',
                         'amount'.
+
 -o output_type          Output type. It can be 'id', 'name',
                         'rpc', 'explorers'.
+
 -m retrieval_mode       It can be 'offline'.
+
 -u y/n                  Whether to look for the database in
                         he user level configuration directory.
+
 -d db_path              Path of the chains' info json file
                         to be used for 'offline' retrieval
                         mode. Can be input more than once.
--s selection_method     When output type is 'rpc', 
+
+-s selection_method     When output type is 'rpc',
                         selection criterion to use when
                         more than one is available.
                         It can be 'kirsh', 'random' or
                         'all'.
+
 -k                      Whether to include, when output type
                         is 'rpc', the ones requiring an api key.
 
 -h                      Displays help message.
+
 -c                      Enable color output
+
 -v                      Enable verbose output
 
 Bugs
