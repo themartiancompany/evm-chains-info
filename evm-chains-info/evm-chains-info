@@ -572,13 +572,14 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'i:o:m:d:s:kcvh?' \
+    'i:o:m:u:d:s:kcvh?' \
     arg; do
   case \
     "${arg}" in
     i) override_input_type="${OPTARG}" ;;
     o) override_output_type="${OPTARG}" ;;
     m) override_retrieval_mode="${OPTARG}" ;;
+    u) override_user_level="${OPTARG}" ;;
     d) db_paths+=(
          "${OPTARG}"
        ) ;;
