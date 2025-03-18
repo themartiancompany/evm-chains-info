@@ -276,7 +276,7 @@ _db_get(){
       "'${_filter_key}' == '${_filter_value}'"
       "in database '${_db_path}'."
     )
-    _msg_warning \
+    _msg_info \
       "${_msg[*]}"
   fi
   if [[ "${_output_type}" == "rpc" ]]; then
