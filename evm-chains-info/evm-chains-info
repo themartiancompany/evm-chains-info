@@ -37,7 +37,8 @@ _global_variables() {
   input_type=""
   output_type=""
   retrieval_mode=""
-  db_path=""
+  user_level=""
+  db_paths=()
   selection_method=""
   api_key=""
   target_chain=""
@@ -67,7 +68,7 @@ _db_path_check() {
     )
     _msg_error \
       "${_msg[*]}" \
-      1
+      0
   fi
 }
 
@@ -144,32 +145,43 @@ _select() {
   local \
     _selection_method="${1}" \
     _result \
-    _results=() \
+    _selection_results=() \
     _index \
     _length
   shift \
     1
-  _results=(
+  _selection_results=(
     "$@"
   )
   if [[ "${_selection_method}" == "kirsh" ]]; then
-    _index="0"
-    _dequote \
-      "${_results[${_index}]}"
+    _length="${#_selection_results[@]}"
+    if (( 0 < "${_length}" )); then
+      _index="0"
+      _results+=( "$( \
+        _dequote \
+          "${_selection_results[${_index}]}")"
+      )
+    fi
   elif [[ "${_selection_method}" == "random" ]]; then
-    _length="${#_results[@]}"
-    _index="$( \
-      shuf \
-        -i \
-          "0-$((${_length} -1))" \
-        -n \
-          1)"
-    _dequote \
-      "${_results[${_index}]}"
+    _length="${#_selection_results[@]}"
+    if (( 0 < "${_length}" )); then
+      _index="$( \
+        shuf \
+          -i \
+            "0-$((${_length} -1))" \
+          -n \
+            1)"
+      _results+=( "$( \
+        _dequote \
+          "${_selection_results[${_index}]}")"
+      )
+    fi
   elif [[ "${_selection_method}" == "all" ]]; then
-    for _result in "${_results[@]}"; do
-      _dequote \
-        "${_result}"
+    for _result in "${_selection_results[@]}"; do
+      _results+=( "$( \
+        _dequote \
+          "${_result}")"
+      )
     done
   fi
 }
@@ -238,21 +250,21 @@ _db_get(){
         jq \
           "${_filter}")"
   elif [[ "${quiet}" == "y" ]]; then
-  _results_string="$( \
-    cat \
-      "${_db_path}" | \
-      jq \
-        "${_filter}" 2>/dev/null || \
-      true)"
+    _results_string="$( \
+      cat \
+        "${_db_path}" | \
+        jq \
+          "${_filter}" 2>/dev/null || \
+        true)"
   fi
   if [[ "${_results_string}" == "" ]]; then
     _msg=(
-      "found no results for"
+      "Found no results for"
       "'${_filter_key}' == '${_filter_value}'"
+      "in database '${_db_path}'."
     )
-    _msg_error \
-      "${_msg[*]}" \
-      1
+    _msg_warning \
+      "${_msg[*]}"
   fi
   if [[ "${_output_type}" == "rpc" ]]; then
     _rpc_get \
@@ -264,11 +276,14 @@ _db_get(){
       "${_results_string}" \
       "${_selection_method}"
   elif [[ "${_output_type}" == "name" ]]; then
-  _dequote \
-    "${_results_string}"
+    _results+=( "$( \
+      _dequote \
+        "${_results_string}")"
+    )
   elif [[ "${_output_type}" == "id" ]]; then
-    echo \
+    _results+=( 
       "${_results_string}"
+    )
   fi
 }
 
@@ -277,31 +292,59 @@ _evm_chains_info() {
     _input_type="${1}" \
     _output_type="${2}" \
     _retrieval_mode="${3}" \
-    _db_path="${4}" \
-    _selection_method="${5}" \
-    _api_key="${6}" \
-    _target_chain="${7}"
+    _selection_method="${4}" \
+    _api_key="${5}" \
+    _target_chain="${6}" \
+    _db_paths=() \
+    _result \
+    _results=() \
+    _db_path \
+    _msg=()
   shift \
-    7
-  _opts+=(
+    6
+  _db_paths+=(
     "$@"
   )
+  _networks_total="0"
   if [[ "${_retrieval_mode}" == "offline" ]]; then
-    _db_path_check \
-      "${_db_path}"
+    for _db_path in "${_db_paths[@]}"; do
+      _db_path_check \
+        "${_db_path}"
+      if [[ "${_input_type}" != "amount" ]]; then
+        _db_get \
+          "${_db_path}" \
+          "${_input_type}" \
+          "${_output_type}" \
+          "${_selection_method}" \
+          "${_api_key}" \
+          "${_target_chain}"
+      elif [[ "${_input_type}" == "amount" ]]; then
+        _amount="$( \
+          cat \
+            "${_db_path}" | \
+            jq \
+              '. | length')"
+        _networks_total="$(( \
+          "${_networks_total}" + \
+          "${_amount}"))"
+      fi
+    done
     if [[ "${_input_type}" != "amount" ]]; then
-      _db_get \
-        "${_db_path}" \
-        "${_input_type}" \
-        "${_output_type}" \
-        "${_selection_method}" \
-        "${_api_key}" \
-        "${_target_chain}"
+      if [[ "${#_results[@]}" == "0" ]]; then
+        _msg=(
+          "No results found for network"
+          "'${_target_chain}'.")
+        _msg_error \
+          "${_msg[*]}" \
+          1
+      fi
+      for _result in "${_results[@]}"; do
+        echo \
+          "${_result}"
+      done
     elif [[ "${_input_type}" == "amount" ]]; then
-      cat \
-        "${_db_path}" | \
-        jq \
-          '. | length'
+      echo \
+        "${_networks_total}"
     fi
   elif [[ "${_retrieval_mode}" == "online" ]]; then
     _msg=(
@@ -312,7 +355,7 @@ _evm_chains_info() {
       1
   else
     _msg=(
-      "unknown retrieval mode '${_retrieval_mode}'."
+      "Unknown retrieval mode '${_retrieval_mode}'."
     )
     _msg_error \
       "${_msg[*]}" \
@@ -320,40 +363,82 @@ _evm_chains_info() {
   fi
 }
 
+_db_default_path_get() {
+  local \
+    _type="${1}" \
+    _lib \
+    _msg=() \
+    _chains \
+    _db
+  _chains="evm-chains/chains.json"
+  if [[ "${_type}" == "user" ]]; then
+    _db="${HOME}/.config/${_chains}"
+  elif [[ "${_type}" == "system" ]]; then
+    _lib="$( \
+      _get_lib)"
+    _db="${_lib}/${_chains}"
+  else
+    _msg=(
+      "Unknown type '${_type}'."
+    )
+    _msg_error \
+      "${_msg[*]}" \
+      1
+  fi
+  echo \
+    "${_db}"
+}
+
 _db_path_auto_detect() {
   local \
-    _lib \
     _chains \
     _db \
-    _db_user \
+    _db_fallback \
+    _type_primary \
+    _type_fallback \
     _msg=()
-  _lib="$( \
-    _get_lib)"
-  _chains="evm-chains/chains.json"
-  _db="${_lib}/${_chains}"
+  if [[ "${user_level}" == "y" ]]; then
+    _type_primary="user"
+    _type_fallback="system"
+  elif [[ "${user_level}" == "n" ]]; then
+    _type_primary="system"
+    _type_fallback="user"
+  fi
+  _db="$( \
+    _db_default_path_get \
+      "${_type_primary}")"
+  _db_fallback="$( \
+    _db_default_path_get \
+      "${_type_fallback}")"
+  if [[ -e "${_db}" ]]; then
+    db_paths+=(
+      "${_db}"
+    )
+  fi
   if [[ ! -e "${_db}" ]]; then
-    _db_user="${HOME}/.config/${_chains}"
     _msg=(
-      "System database '${_db}'"
-      "not found, trying '${_db_user}'"
+      "Default database '${_db}'"
+      "not found, trying '${_db_fallback}'"
     )
     _msg_info \
       "${_msg[*]}"
-    if [[ ! -e "${_db_user}" ]]; then
+    if [[ ! -e "${_db_fallback}" ]]; then
      _msg=(
-       "User database '${_db_user}'"
+       "Fallback database"
+       "'${_db_fallback}'"
        "not found too!'"
      )
+    # This will be a warning when the
+    # evm-chains contract will have been
+    # deployed
     _msg_error \
       "${_msg[*]}" \
       1
     fi
-    _db="${_db_user}"
+    db_paths+=(
+      "${_db_fallback}"
+    )
   fi
-  _set_override \
-   "db" \
-   "path" \
-   "${_db}"
 }
 
 _input_type_auto_detect() {
@@ -404,6 +489,10 @@ _set_overrides() {
     "api" \
     "key" \
     "n"
+  _set_override \
+    "user" \
+    "level" \
+    "y"
   _db_path_auto_detect
 }
 
@@ -422,7 +511,7 @@ _usage() {
 Returns info about EVM blockchains.
 
 Usage:
-  $(_get "app" "name")
+  ${app_name}
     [options]
     <target_chain>
 
@@ -435,6 +524,9 @@ Usage:
                             Default: '${output_type}'
      -m <retrieval_mode>    It can be 'offline'.
                             Default: '${retrieval_mode}'
+     -u <y/n>               Whether to look for the database in
+                            he user level configuration directory.
+                            Default: '${user_level}'
      -d <db_path>           Path of the chains' info json file
                             to be used for 'offline' retrieval
                             mode.
@@ -467,10 +559,11 @@ _show_config() {
   _msg_info "               Input type:   ${input_type}"
   _msg_info "              Output type:   ${output_type}"
   _msg_info "           Retrieval mode:   ${retrieval_mode}"
-  _msg_info "            Database path:   ${db_path}"
+  _msg_info "      User-level database:   ${user_level}"
   _msg_info "                  API Key:   ${api_key}"
   _msg_info "     RPC selection method:   ${selection_method}"
   _msg_info "             Target chain:   ${target_chain}"
+  _msg_info "           Database paths:   ${db_paths[*]}"
 }
 
 _globals
@@ -486,7 +579,9 @@ while \
     i) override_input_type="${OPTARG}" ;;
     o) override_output_type="${OPTARG}" ;;
     m) override_retrieval_mode="${OPTARG}" ;;
-    d) override_db_path="${OPTARG}" ;;
+    d) db_paths+=(
+         "${OPTARG}"
+       ) ;;
     s) override_selection_method="${OPTARG}" ;;
     k) override_api_key="y" ;;
     c) override_color="y" ;;
@@ -536,10 +631,10 @@ app_opts=(
   "${input_type}"
   "${output_type}"
   "${retrieval_mode}"
-  "${db_path}"
   "${selection_method}"
   "${api_key}"
   "${target_chain}"
+  "${db_paths[@]}"
 )
 _evm_chains_info \
   "${app_opts[@]}"
