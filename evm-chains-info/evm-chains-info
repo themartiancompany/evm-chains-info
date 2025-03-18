@@ -360,6 +360,9 @@ _evm_chains_info() {
       for _result in "${_results[@]}"; do
         echo \
           "${_result}"
+        if [[ "${_selection_method}" != "all" ]]; then
+          break
+        fi
       done
     elif [[ "${_input_type}" == "amount" ]]; then
       echo \
