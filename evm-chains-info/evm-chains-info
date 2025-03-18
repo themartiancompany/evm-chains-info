@@ -157,10 +157,14 @@ _select() {
     _length="${#_selection_results[@]}"
     if (( 0 < "${_length}" )); then
       _index="0"
-      _results+=( "$( \
+      _result="$( \
         _dequote \
           "${_selection_results[${_index}]}")"
-      )
+      if [[ "${_result}" != "" ]]; then
+        _results+=(
+          "${_result}"
+        )
+      fi
     fi
   elif [[ "${_selection_method}" == "random" ]]; then
     _length="${#_selection_results[@]}"
@@ -171,17 +175,25 @@ _select() {
             "0-$((${_length} -1))" \
           -n \
             1)"
-      _results+=( "$( \
+      _result="$( \
         _dequote \
           "${_selection_results[${_index}]}")"
-      )
+      if [[ "${_result}" != "" ]]; then
+        _results+=(
+          "${_result}"
+        )
+      fi
     fi
   elif [[ "${_selection_method}" == "all" ]]; then
     for _result in "${_selection_results[@]}"; do
-      _results+=( "$( \
+      _result="$( \
         _dequote \
           "${_result}")"
-      )
+      if [[ "${_result}" != "" ]]; then
+        _results+=(
+          "${_result}"
+        )
+      fi
     done
   fi
 }
@@ -225,6 +237,7 @@ _db_get(){
     _api_key="${5}" \
     _target_chain="${6}" \
     _filter \
+    _result \
     _rpcs=() \
     _msg=()
   _filter_output_type="${_output_type}"
@@ -276,14 +289,20 @@ _db_get(){
       "${_results_string}" \
       "${_selection_method}"
   elif [[ "${_output_type}" == "name" ]]; then
-    _results+=( "$( \
+    _result="$( \
       _dequote \
         "${_results_string}")"
-    )
+    if [[ "${_result}" != "" ]]; then
+      _results+=(
+        "${_result}"
+      )
+    fi
   elif [[ "${_output_type}" == "id" ]]; then
-    _results+=( 
-      "${_results_string}"
-    )
+    if [[ "${_results_string}" != "" ]]; then
+      _results+=( 
+        "${_results_string}"
+      )
+    fi
   fi
 }
 
@@ -414,8 +433,7 @@ _db_path_auto_detect() {
     db_paths+=(
       "${_db}"
     )
-  fi
-  if [[ ! -e "${_db}" ]]; then
+  elif [[ ! -e "${_db}" ]]; then
     _msg=(
       "Default database '${_db}'"
       "not found, trying '${_db_fallback}'"
@@ -435,6 +453,8 @@ _db_path_auto_detect() {
       "${_msg[*]}" \
       1
     fi
+  fi
+  if [[ -e "${_db_fallback}" ]]; then
     db_paths+=(
       "${_db_fallback}"
     )
