@@ -49,7 +49,8 @@ install-doc:
 
 install-man:
 
-	$(_INSTALL_DIR) \
+	install \
+	  -vdm755 \
 	  "$(MAN_DIR)/man1"
 	rst2man \
 	  "man/$(_PROJECT).1.rst" \
