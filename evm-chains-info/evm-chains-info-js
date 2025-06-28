@@ -147,6 +147,41 @@ function
   }
 }
 
+function _rpc_backends_get(
+    _networks_chain_ids,
+    _selection_method,
+    _db_path) {
+    let
+      _chain_id,
+      _rpc_backend_get_opts,
+      _rpcs;
+  if ( _selection_method == undefined ) {
+    _selection_method =
+      "kirsh";
+  }
+  if ( _db_path == undefined ) {
+    _db_path =
+      _evm_chains_db_path_get(
+        false);
+  }
+  _rpcs =
+    [];
+  for ( _chain_id of _networks_chain_ids ) {
+    _rpc_backend_get_opts = [
+      _chain_id,
+      _selection_method,
+      _db_path
+    ];
+    _rpc_backend =
+      _rpc_backend_get.apply(
+        null,
+        _rpc_backend_get_opts);
+    _rpcs.append(
+      _rpc_backend);
+  }
+  return _rpcs;
+}
+
 module.exports = {
   _evm_chains_db_path_get:
     _evm_chains_db_path_get,
