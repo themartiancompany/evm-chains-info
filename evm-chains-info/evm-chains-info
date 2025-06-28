@@ -553,7 +553,7 @@ Usage:
      -d <db_path>           Path of the chains' info json file
                             to be used for 'offline' retrieval
                             mode.
-                            Default: '${db_path}'
+                            Default: '${db_paths[*]}'
      -s <selection_method>  When output type is 'rpc', 
                             selection criterion to use when
                             more than one is available.
