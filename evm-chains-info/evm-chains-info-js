@@ -142,7 +142,7 @@ function
   }
   else {
     _msg_error(
-      "Unknown selection method",
+      "Unknown selection method.",
       1);
   }
 }
@@ -189,4 +189,6 @@ module.exports = {
     _evm_chain_info_get,
   _rpc_backend_get:
     _rpc_backend_get
+  _rpc_backends_get:
+    _rpc_backends_get
 };
