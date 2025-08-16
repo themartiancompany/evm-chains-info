@@ -411,7 +411,7 @@ _db_default_path_get() {
     _format="${1}"
   fi
   _chains="evm-chains/chains.json"
-  _chain="evm-chains/split/${target_chain}.json"
+  _chain="evm-chains/${target_chain}.json"
   if [[ "${_type}" == "user" ]]; then
     if [[ "${_format}" == "unified" ]]; then
       _db="${HOME}/.config/${_chains}"
@@ -442,7 +442,9 @@ _db_path_auto_detect() {
   local \
     _chains \
     _db \
+    _db_split \
     _db_fallback \
+    _db_fallback_split \
     _type_primary \
     _type_fallback \
     _msg=()
@@ -455,10 +457,32 @@ _db_path_auto_detect() {
   fi
   _db="$( \
     _db_default_path_get \
-      "${_type_primary}")"
+      "${_type_primary}" \
+      "unified")"
+  _db_split="$( \
+    _db_default_path_get \
+      "${_type_primary}" \
+      "split")"
   _db_fallback="$( \
     _db_default_path_get \
-      "${_type_fallback}")"
+      "${_type_fallback}" \
+      "unified")"
+  _db_fallback_split="$( \
+    _db_default_path_get \
+      "${_type_fallback}" \
+      "split")"
+  if [[ -e "${_db_split}" ]]; then
+    db_paths+=(
+      "${_db_split}"
+    )
+  elif [[ ! -e "${_db_split}" ]]; then
+    _msg=(
+      "Default database '${_db_split}'"
+      "not found, trying '${_db}'"
+    )
+    _msg_info \
+      "${_msg[*]}"
+  fi
   if [[ -e "${_db}" ]]; then
     db_paths+=(
       "${_db}"
@@ -466,23 +490,35 @@ _db_path_auto_detect() {
   elif [[ ! -e "${_db}" ]]; then
     _msg=(
       "Default database '${_db}'"
+      "not found, trying '${_db_fallback_split}'"
+    )
+    _msg_info \
+      "${_msg[*]}"
+  fi
+  if [[ -e "${_db_fallback_split}" ]]; then
+    db_paths+=(
+      "${_db_fallback_split}"
+    )
+  elif [[ ! -e "${_db_fallback_split}" ]]; then
+    _msg=(
+      "Fallback split database ${_db_fallback_split}"
       "not found, trying '${_db_fallback}'"
     )
     _msg_info \
       "${_msg[*]}"
-    if [[ ! -e "${_db_fallback}" ]]; then
-     _msg=(
-       "Fallback database"
-       "'${_db_fallback}'"
-       "not found too!'"
-     )
-    # This will be a warning when the
-    # evm-chains contract will have been
-    # deployed
-    _msg_error \
-      "${_msg[*]}" \
-      1
-    fi
+  fi
+  if [[ ! -e "${_db_fallback}" ]]; then
+   _msg=(
+     "Fallback database"
+     "'${_db_fallback}'"
+     "not found too!'"
+   )
+  # This will be a warning when the
+  # evm-chains contract will have been
+  # deployed
+  _msg_error \
+    "${_msg[*]}" \
+    1
   fi
   if [[ -e "${_db_fallback}" ]]; then
     db_paths+=(
