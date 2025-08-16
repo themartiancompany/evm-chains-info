@@ -445,8 +445,6 @@ _db_path_auto_detect() {
   _db_fallback="$( \
     _db_default_path_get \
       "${_type_fallback}")"
-  _db_fast_access="$( \
-    _db_fast_access_default_path_get)"
   if [[ -e "${_db}" ]]; then
     db_paths+=(
       "${_db}"
