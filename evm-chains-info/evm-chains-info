@@ -390,14 +390,28 @@ _evm_chains_info() {
 _db_default_path_get() {
   local \
     _type="${1}" \
-    _format="${2}" \
+    _format \
     _lib \
     _msg=() \
     _chain \
     _chains \
-    _db
+    _db \
+    _args=()
+  shift \
+    1
+  _args+=(
+    "$@"
+  )
+  if [[ "${target_chain}" != "" ]]; then
+    _format="split"
+  else
+    _format="unified"
+  fi
+  if (( 0 < "${#_args[@]}" )); then
+    _format="${1}"
+  fi
   _chains="evm-chains/chains.json"
-  _chain="evm-chains/split/${_target_chain}.json"
+  _chain="evm-chains/split/${target_chain}.json"
   if [[ "${_type}" == "user" ]]; then
     if [[ "${_format}" == "unified" ]]; then
       _db="${HOME}/.config/${_chains}"
