@@ -42,6 +42,7 @@ _global_variables() {
   selection_method=""
   api_key=""
   target_chain=""
+  networks_all=""
   color=""
   quiet=""
 }
@@ -313,14 +314,15 @@ _evm_chains_info() {
     _retrieval_mode="${3}" \
     _selection_method="${4}" \
     _api_key="${5}" \
-    _target_chain="${6}" \
+    _networks_all="${6}" \
+    _target_chain="${7}" \
     _db_paths=() \
     _result \
     _results=() \
     _db_path \
     _msg=()
   shift \
-    6
+    7
   _db_paths+=(
     "$@"
   )
@@ -355,7 +357,7 @@ _evm_chains_info() {
           "'${_target_chain}'.")
         _msg_error \
           "${_msg[*]}" \
-          1
+          0
       fi
       for _result in "${_results[@]}"; do
         echo \
@@ -388,17 +390,28 @@ _evm_chains_info() {
 _db_default_path_get() {
   local \
     _type="${1}" \
+    _format="${2}" \
     _lib \
     _msg=() \
+    _chain \
     _chains \
     _db
   _chains="evm-chains/chains.json"
+  _chain="evm-chains/split/${_target_chain}.json"
   if [[ "${_type}" == "user" ]]; then
-    _db="${HOME}/.config/${_chains}"
+    if [[ "${_format}" == "unified" ]]; then
+      _db="${HOME}/.config/${_chains}"
+    elif [[ "${_format}" == "split" ]]; then
+      _db="${HOME}/.config/${_chain}"
+    fi
   elif [[ "${_type}" == "system" ]]; then
     _lib="$( \
       _get_lib)"
-    _db="${_lib}/${_chains}"
+    if [[ "${_format}" == "unified" ]]; then
+      _db="${_lib}/${_chains}"
+    elif [[ "${_format}" == "split" ]]; then
+      _db="${_lib}/${_chain}"
+    fi
   else
     _msg=(
       "Unknown type '${_type}'."
@@ -432,6 +445,8 @@ _db_path_auto_detect() {
   _db_fallback="$( \
     _db_default_path_get \
       "${_type_fallback}")"
+  _db_fast_access="$( \
+    _db_fast_access_default_path_get)"
   if [[ -e "${_db}" ]]; then
     db_paths+=(
       "${_db}"
@@ -563,6 +578,8 @@ Usage:
      -k                     Whether to include, when output type
                             is 'rpc', the ones requiring an api key.
                             Default: '${api_key}'
+     -a                     Whether to show results for all networks.
+                            Default: '${networks_all}'
 
      -h                     This message.
      -c                     Enable color output
@@ -657,6 +674,7 @@ app_opts=(
   "${retrieval_mode}"
   "${selection_method}"
   "${api_key}"
+  "${networks_all}"
   "${target_chain}"
   "${db_paths[@]}"
 )
