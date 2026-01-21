@@ -2,7 +2,7 @@
    SPDX-License-Identifier: AGPL-3.0-or-later
 
    ----------------------------------------------------------------------
-   Copyright © 2024, 2025  Pellegrino Prevete
+   Copyright © 2024, 2025, 2026  Pellegrino Prevete
 
    All rights reserved
    ----------------------------------------------------------------------
@@ -31,10 +31,12 @@ Ethereum Virtual Machine Blockchains Information Retrieval Tool
 :Version: evm-chains-info |version|
 :Manual section: 1
 
+
 Synopsis
 ========
 
-evm-chains-info *[options]* *target-chain*
+evm-chains-info *[options]* (*target-chain*)
+
 
 Description
 ===========
@@ -43,6 +45,7 @@ Returns info about EVM blockchains retrieving
 the information from local databases in
 JSON format in the format provided by
 *evm-chains*.
+
 
 Options
 =======
@@ -58,11 +61,11 @@ Options
 -u y/n                  Whether to look for the database in
                         he user level configuration directory.
 
--d db_path              Path of the chains' info json file
+-d db-path              Path of the chains' info json file
                         to be used for 'offline' retrieval
                         mode. Can be input more than once.
 
--s selection_method     When output type is 'rpc',
+-s selection-method     When output type is 'rpc',
                         selection criterion to use when
                         more than one is available.
                         It can be 'kirsh', 'random' or
@@ -71,21 +74,26 @@ Options
 -k                      Whether to include, when output type
                         is 'rpc', the ones requiring an api key.
 
+-a                      Retrieve results for all networks.
+
 -h                      Displays help message.
 
 -c                      Enable color output
 
 -v                      Enable verbose output
 
+
 Bugs
 ====
 
 https://github.com/themartiancompany/evm-chains-info/-/issues
 
+
 Copyright
 =========
 
 Copyright Pellegrino Prevete. AGPL-3.0.
+
 
 See also
 ========
