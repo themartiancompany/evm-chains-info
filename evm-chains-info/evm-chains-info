@@ -99,9 +99,9 @@ _filter_by_get() {
 
 _all_get() {
  local \
-   _key="${1}"
+   _filter_output_type="${1}"
   _filter=(
-    ".[].${_key}"
+    ".[].${_filter_output_type}"
   )
   echo \
     "${_filter[*]}"
@@ -282,7 +282,6 @@ _db_get(){
   if [[ "${_networks_all}" == "y" ]]; then
     _filter="$(
       _all_get \
-        "${_filter_key}" \
         "${_filter_output_type}")"
   elif [[ "${_networks_all}" == "n" ]]; then
     _filter="$(
