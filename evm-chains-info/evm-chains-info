@@ -21,18 +21,23 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-_bin="$( \
+_bin="$(
   dirname \
-    "$( \
-      command \
-        -v \
-	  "env")")"
-_lib="${_bin}/../lib"
+    "$(command \
+         -v \
+         "env")")"
+_lib="$(
+  realpath \
+    "${_bin}/../lib")"
+_crash_bash="${_lib}/libcrash-bash/crash-bash"
+_sourced \
+  "${_crash_bash}" 2>"/dev/null" || \
 source \
-  "${_lib}/libcrash-bash/crash-bash"
+  "${_crash_bash}"
 
 # shellcheck disable=SC2034
 _global_variables() {
+  argument_required=""
   get_date=""
   input_type=""
   output_type=""
@@ -92,6 +97,16 @@ _filter_by_get() {
     "${_filter[*]}"
 }
 
+_all_get() {
+ local \
+   _key="${1}"
+  _filter=(
+    ".[].${_key}"
+  )
+  echo \
+    "${_filter[*]}"
+}
+
 _filter_get() {
   local \
     _key="${1}" \
@@ -125,17 +140,17 @@ _rpc_filter_api_key() {
   if [[ "${_api_key}" == "y" ]]; then
     _rpcs=( $( \
       echo \
-        "${_rpcs_string}" | \
+        "${_rpcs_string}" |
         jq \
           -c \
           ".[]")
     )
   elif [[ "${_api_key}" == "n" ]]; then
-    _filter="$( \
+    _filter="$(
       _filter_rpc_no_api_key_get)"
-    readarray -t _rpcs <<< "$( \
+    readarray -t _rpcs <<< "$(
       echo \
-        "${_rpcs_string}" | \
+        "${_rpcs_string}" |
         jq \
           -c \
           "${_filter}")"
@@ -158,7 +173,7 @@ _select() {
     _length="${#_selection_results[@]}"
     if (( 0 < "${_length}" )); then
       _index="0"
-      _result="$( \
+      _result="$(
         _dequote \
           "${_selection_results[${_index}]}")"
       if [[ "${_result}" != "" ]]; then
@@ -170,13 +185,13 @@ _select() {
   elif [[ "${_selection_method}" == "random" ]]; then
     _length="${#_selection_results[@]}"
     if (( 0 < "${_length}" )); then
-      _index="$( \
+      _index="$(
         shuf \
           -i \
             "0-$((${_length} -1))" \
           -n \
             1)"
-      _result="$( \
+      _result="$(
         _dequote \
           "${_selection_results[${_index}]}")"
       if [[ "${_result}" != "" ]]; then
@@ -187,7 +202,7 @@ _select() {
     fi
   elif [[ "${_selection_method}" == "all" ]]; then
     for _result in "${_selection_results[@]}"; do
-      _result="$( \
+      _result="$(
         _dequote \
           "${_result}")"
       if [[ "${_result}" != "" ]]; then
@@ -220,7 +235,7 @@ _explorers_get() {
     _explorer
   _explorers=( $( \
     echo \
-      "${_explorers_string}" | \
+      "${_explorers_string}" |
       jq \
         ".[].url")
   )
@@ -244,29 +259,48 @@ _db_get(){
   _filter_output_type="${_output_type}"
   if [[ "${_input_type}" == "id" ]]; then
     _filter_key="chainId"
+    # if [[ "${_networks_all}" == "y" ]]; then
+    #   _filter_value=""
+    # fi
     _filter_value="${_target_chain}"
   elif [[ "${_input_type}" == "name" ]]; then
     _filter_key="name"
     _filter_value="\"${_target_chain}\""
+  elif [[ "${_input_type}" == "testnet" ]]; then
+    _msg=(
+      "I'm not sure the schema used by"
+      "the evm project by ligi includes"
+      "a specific testnets classification"
+      "but i think not."
+    )
+    echo \
+      "${_msg[*]}"
   fi
   if [[ "${_output_type}" == "id" ]]; then
     _filter_output_type="chainId"
   fi
-  _filter="$( \
-    _filter_get \
-      "${_filter_key}" \
-      "${_filter_value}" \
-      "${_filter_output_type}")"
+  if [[ "${_networks_all}" == "y" ]]; then
+    _filter="$(
+      _all_get \
+        "${_filter_key}" \
+        "${_filter_output_type}")"
+  elif [[ "${_networks_all}" == "n" ]]; then
+    _filter="$(
+      _filter_get \
+        "${_filter_key}" \
+        "${_filter_value}" \
+        "${_filter_output_type}")"
+  fi
   if [[ "${quiet}" == "n" ]]; then
-    _results_string="$( \
+    _results_string="$(
       cat \
-        "${_db_path}" | \
+        "${_db_path}" |
         jq \
           "${_filter}")"
   elif [[ "${quiet}" == "y" ]]; then
-    _results_string="$( \
+    _results_string="$(
       cat \
-        "${_db_path}" | \
+        "${_db_path}" |
         jq \
           "${_filter}" 2>/dev/null || \
         true)"
@@ -290,7 +324,7 @@ _db_get(){
       "${_results_string}" \
       "${_selection_method}"
   elif [[ "${_output_type}" == "name" ]]; then
-    _result="$( \
+    _result="$(
       _dequote \
         "${_results_string}")"
     if [[ "${_result}" != "" ]]; then
@@ -329,6 +363,11 @@ _evm_chains_info() {
   _networks_total="0"
   if [[ "${_retrieval_mode}" == "offline" ]]; then
     for _db_path in "${_db_paths[@]}"; do
+      _msg=(
+        "Looking in '${_db_path}'."
+      )
+      _msg_info \
+        "${_msg[*]}"
       _db_path_check \
         "${_db_path}"
       if [[ "${_input_type}" != "amount" ]]; then
@@ -340,12 +379,12 @@ _evm_chains_info() {
           "${_api_key}" \
           "${_target_chain}"
       elif [[ "${_input_type}" == "amount" ]]; then
-        _amount="$( \
+        _amount="$(
           cat \
-            "${_db_path}" | \
+            "${_db_path}" |
             jq \
               '. | length')"
-        _networks_total="$(( \
+        _networks_total="$((
           "${_networks_total}" + \
           "${_amount}"))"
       fi
@@ -419,7 +458,7 @@ _db_default_path_get() {
       _db="${HOME}/.config/${_chain}"
     fi
   elif [[ "${_type}" == "system" ]]; then
-    _lib="$( \
+    _lib="$(
       _get_lib)"
     if [[ "${_format}" == "unified" ]]; then
       _db="${_lib}/${_chains}"
@@ -455,19 +494,19 @@ _db_path_auto_detect() {
     _type_primary="system"
     _type_fallback="user"
   fi
-  _db="$( \
+  _db="$(
     _db_default_path_get \
       "${_type_primary}" \
       "unified")"
-  _db_split="$( \
+  _db_split="$(
     _db_default_path_get \
       "${_type_primary}" \
       "split")"
-  _db_fallback="$( \
+  _db_fallback="$(
     _db_default_path_get \
       "${_type_fallback}" \
       "unified")"
-  _db_fallback_split="$( \
+  _db_fallback_split="$(
     _db_default_path_get \
       "${_type_fallback}" \
       "split")"
@@ -579,6 +618,10 @@ _set_overrides() {
     "user" \
     "level" \
     "y"
+  _set_override \
+    "networks" \
+    "all" \
+    "n"
   _db_path_auto_detect
 }
 
@@ -650,6 +693,7 @@ _show_config() {
   _msg_info "      User-level database:   ${user_level}"
   _msg_info "                  API Key:   ${api_key}"
   _msg_info "     RPC selection method:   ${selection_method}"
+  _msg_info "             All networks:   ${networks_all}"
   _msg_info "             Target chain:   ${target_chain}"
   _msg_info "           Database paths:   ${db_paths[*]}"
 }
@@ -660,7 +704,7 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'i:o:m:u:d:s:kcvh?' \
+    'i:o:m:u:d:s:kacvh?' \
     arg; do
   case \
     "${arg}" in
@@ -673,6 +717,7 @@ while \
        ) ;;
     s) override_selection_method="${OPTARG}" ;;
     k) override_api_key="y" ;;
+    a) override_networks_all="y" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
     h|?) _set_overrides && \
@@ -688,31 +733,37 @@ while \
   esac
 done
 shift \
-  $(( \
+  $((
     OPTIND - 1 \
   ))
-_argument_required="true"
-if (( $# < 1 )); then
+argument_required="true"
+if (( ${#} < 1 )); then
   if [[ -v "override_input_type" ]]; then
     if [[ "${override_input_type}" == "amount" ]]; then
-      _argument_required="false"
+      argument_required="false"
       true
     fi
   fi
-  if [[ "${_argument_required}" == "true" ]]; then
+  if [[ -v "override_output_type" ]]; then
+    if [[ "${override_output_type}" == "id" ]]; then
+      argument_required="false"
+      true
+    fi
+  fi
+  if [[ "${argument_required}" == "true" ]]; then
+    _msg=(
+      "No chain identifier given."
+    )
     _msg_error \
-      "no chain identifier given", \
+      "${_msg[*]}" \
       0
     _set_overrides
     _usage \
       1
   fi
 fi
-if [[ "${_argument_required}" == "true" ]]; then
-  _set \
-    "target" \
-    "chain" \
-    "${1}"
+if [[ "${argument_required}" == "true" ]]; then
+  target_chain="${1}"
 fi
 _set_overrides
 _show_config
