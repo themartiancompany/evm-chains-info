@@ -50,13 +50,17 @@ JSON format in the format provided by
 Options
 =======
 
--i input_type           Input type. It can be 'id' or 'name',
+-C target-command       Target command. It can be
+                        - 'get' or
+                        - 'set'.
+
+-i input-type           Input type. It can be 'id' or 'name',
                         'amount'.
 
--o output_type          Output type. It can be 'id', 'name',
+-o output-type          Output type. It can be 'id', 'name',
                         'rpc', 'explorers'.
 
--m retrieval_mode       It can be 'offline'.
+-m retrieval-mode       It can be 'offline'.
 
 -u y/n                  Whether to look for the database in
                         he user level configuration directory.
