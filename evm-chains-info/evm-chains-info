@@ -39,6 +39,7 @@ source \
 _global_variables() {
   argument_required=""
   get_date=""
+  target_command=""
   input_type=""
   output_type=""
   retrieval_mode=""
@@ -340,26 +341,7 @@ _db_get(){
   fi
 }
 
-_evm_chains_info() {
-  local \
-    _input_type="${1}" \
-    _output_type="${2}" \
-    _retrieval_mode="${3}" \
-    _selection_method="${4}" \
-    _api_key="${5}" \
-    _networks_all="${6}" \
-    _target_chain="${7}" \
-    _db_paths=() \
-    _result \
-    _results=() \
-    _db_path \
-    _msg=()
-  shift \
-    7
-  _db_paths+=(
-    "$@"
-  )
-  _networks_total="0"
+_evm_chains_info_get() {
   if [[ "${_retrieval_mode}" == "offline" ]]; then
     for _db_path in "${_db_paths[@]}"; do
       _msg=(
@@ -422,6 +404,46 @@ _evm_chains_info() {
     _msg_error \
       "${_msg[*]}" \
       1
+  fi
+
+}
+
+_evm_chains_info_set() {
+  local \
+    _input_type="${1}" \
+    _value_type="${2}" \
+    _metric_file
+  _metric_file=""
+  if [[ "${_input_type}" == "id" ]]; then
+    echo "hurr"
+  fi
+}
+
+_evm_chains_info() {
+  local \
+    _target_command="${1}" \
+    _input_type="${2}" \
+    _output_type="${3}" \
+    _retrieval_mode="${4}" \
+    _selection_method="${5}" \
+    _api_key="${6}" \
+    _networks_all="${7}" \
+    _target_chain="${8}" \
+    _db_paths=() \
+    _result \
+    _results=() \
+    _db_path \
+    _msg=()
+  shift \
+    8
+  _db_paths+=(
+    "$@"
+  )
+  _networks_total="0"
+  if [[ "${_target_command}" == "get" ]]; then
+    _evm_chains_info_get
+  elif [[ "${_target_command}" == "set" ]]; then
+    _evm_chains_info_set
   fi
 }
 
@@ -596,6 +618,10 @@ _set_overrides() {
     "get" \
     "date" \
     "$(_get_date_human)"
+  _set_override \
+    "target" \
+    "command" \
+    "get"
   _input_type_auto_detect
   _set_override \
     "output" \
@@ -644,6 +670,11 @@ Usage:
     <target_chain>
 
   options:
+     -C <target_command>    Target command.
+                            It can be:
+                            - 'get' or
+                            - 'set'.
+                            Default: '${target_command}"'
      -i <input_type>        Input type. It can be 'id' or 'name',
                             'amount'.
                             Default: '${input_type}"'
@@ -686,6 +717,7 @@ ENDUSAGETEXT
 _show_config() {
   _msg_info "${app_name} configuration"
   _msg_info "                 Get date:   ${get_date}"
+  _msg_info "           Target command:   ${target_command}"
   _msg_info "               Input type:   ${input_type}"
   _msg_info "              Output type:   ${output_type}"
   _msg_info "           Retrieval mode:   ${retrieval_mode}"
@@ -703,25 +735,38 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'i:o:m:u:d:s:kacvh?' \
+    'C:i:o:m:u:d:s:kacvh?' \
     arg; do
   case \
     "${arg}" in
-    i) override_input_type="${OPTARG}" ;;
-    o) override_output_type="${OPTARG}" ;;
-    m) override_retrieval_mode="${OPTARG}" ;;
-    u) override_user_level="${OPTARG}" ;;
-    d) db_paths+=(
+    C)
+      override_target_command="${OPTARG}" ;;
+    i)
+      override_input_type="${OPTARG}" ;;
+    o)
+      override_output_type="${OPTARG}" ;;
+    m)
+      override_retrieval_mode="${OPTARG}" ;;
+    u)
+      override_user_level="${OPTARG}" ;;
+    d)
+      db_paths+=(
          "${OPTARG}"
        ) ;;
-    s) override_selection_method="${OPTARG}" ;;
-    k) override_api_key="y" ;;
-    a) override_networks_all="y" ;;
-    c) override_color="y" ;;
-    v) override_quiet="n" ;;
-    h|?) _set_overrides && \
-         _usage \
-           0 ;;
+    s)
+      override_selection_method="${OPTARG}" ;;
+    k)
+      override_api_key="y" ;;
+    a)
+      override_networks_all="y" ;;
+    c)
+      override_color="y" ;;
+    v)
+      override_quiet="n" ;;
+    h|?)
+      _set_overrides
+      _usage \
+        0 ;;
     *)
     _msg_error \
       "Invalid argument '${arg}'" \
@@ -767,6 +812,7 @@ fi
 _set_overrides
 _show_config
 app_opts=(
+  "${target_command}"
   "${input_type}"
   "${output_type}"
   "${retrieval_mode}"
