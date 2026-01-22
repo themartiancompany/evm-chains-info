@@ -62,7 +62,7 @@ Options
 
 -m retrieval-mode       It can be 'offline'.
 
--u y/n                  Whether to look for the database in
+-u <y/n>                Whether to look for the database in
                         he user level configuration directory.
 
 -d db-path              Path of the chains' info json file
