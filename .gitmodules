@@ -1,3 +1,6 @@
 [submodule "man"]
 	path = man
 	url = https://github.com/themartiancompany/evm-chains-info-man
+[submodule "evm-chains-info/nodejs"]
+	path = evm-chains-info/nodejs
+	url = https://github.com/themartiancompany/evm-chains-info.js
