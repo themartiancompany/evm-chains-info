@@ -1,25 +1,30 @@
 #!/usr/bin/env bash
 
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: AGPL-3.0
 
-#    ----------------------------------------------------------------------
+#    -----------------------------------------------------
 #    Copyright © 2024, 2025, 2026  Pellegrino Prevete
 #
 #    All rights reserved
-#    ----------------------------------------------------------------------
+#    -----------------------------------------------------
 #
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU Affero General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
+#    This program is free software: you can redistribute
+#    it and/or modify it under the terms of the
+#    GNU Affero General Public License as published by
+#    the Free Software Foundation, either version 3 of
+#    the License, or (at your option) any later version.
 #
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU Affero General Public License for more details.
+#    This program is distributed in the hope that it
+#    will be useful, but WITHOUT ANY WARRANTY;
+#    without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#    See the GNU Affero General Public License for
+#    more details.
 #
-#    You should have received a copy of the GNU Affero General Public License
-#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#    You should have received a copy of the
+#    GNU Affero General Public License
+#    along with this program.
+#    If not, see <https://www.gnu.org/licenses/>.
 
 _bin="$(
   dirname \
@@ -38,7 +43,7 @@ source \
 # shellcheck disable=SC2034
 _global_variables() {
   argument_required=""
-  get_date=""
+  call_date=""
   target_command=""
   input_type=""
   output_type=""
@@ -615,7 +620,7 @@ _set_overrides() {
     color="n"
   fi
   _set_override \
-    "get" \
+    "call" \
     "date" \
     "$(_get_date_human)"
   _set_override \
@@ -716,7 +721,7 @@ ENDUSAGETEXT
 # Shows configuration options.
 _show_config() {
   _msg_info "${app_name} configuration"
-  _msg_info "                 Get date:   ${get_date}"
+  _msg_info "                Call date:   ${call_date}"
   _msg_info "           Target command:   ${target_command}"
   _msg_info "               Input type:   ${input_type}"
   _msg_info "              Output type:   ${output_type}"
