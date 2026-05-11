@@ -347,6 +347,8 @@ _db_get(){
 }
 
 _evm_chains_info_get() {
+  local \
+    _retrieval_mode="${1}"
   if [[ "${_retrieval_mode}" == "offline" ]]; then
     for _db_path in "${_db_paths[@]}"; do
       _msg=(
@@ -446,7 +448,8 @@ _evm_chains_info() {
   )
   _networks_total="0"
   if [[ "${_target_command}" == "get" ]]; then
-    _evm_chains_info_get
+    _evm_chains_info_get \
+      "${_retrieval_mode}"
   elif [[ "${_target_command}" == "set" ]]; then
     _evm_chains_info_set
   fi
@@ -672,30 +675,30 @@ Returns info about EVM blockchains.
 Usage:
   ${app_name}
     [options]
-    <target_chain>
+    <target-chain>
 
   options:
-     -C <target_command>    Target command.
+     -C <target-command>    Target command.
                             It can be:
                             - 'get' or
                             - 'set'.
                             Default: '${target_command}"'
-     -i <input_type>        Input type. It can be 'id' or 'name',
+     -i <input-type>        Input type. It can be 'id' or 'name',
                             'amount'.
                             Default: '${input_type}"'
-     -o <output_type>       Output type. It can be 'id', 'name',
+     -o <output-type>       Output type. It can be 'id', 'name',
                             'rpc', 'explorers'.
                             Default: '${output_type}'
-     -m <retrieval_mode>    It can be 'offline'.
+     -m <retrieval-mode>    It can be 'offline'.
                             Default: '${retrieval_mode}'
      -u <y/n>               Whether to look for the database in
-                            he user level configuration directory.
+                            the user level configuration directory.
                             Default: '${user_level}'
-     -d <db_path>           Path of the chains' info json file
+     -d <db-path>           Path of the chains' info json file
                             to be used for 'offline' retrieval
                             mode.
                             Default: '${db_paths[*]}'
-     -s <selection_method>  When output type is 'rpc', 
+     -s <selection-method>  When output type is 'rpc', 
                             selection criterion to use when
                             more than one is available.
                             It can be 'kirsh', 'random' or
