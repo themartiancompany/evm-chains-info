@@ -78,6 +78,11 @@ install-scripts:
 	  "$(_PROJECT)/$(_PROJECT)-js" \
 	  "$(LIB_DIR)/$(_PROJECT)-js"
 
+install-npm:
+
+	cd \
+	  "$(_PROJECT)/node" &&
+
 install-doc:
 
 	$(_INSTALL_FILE) \
