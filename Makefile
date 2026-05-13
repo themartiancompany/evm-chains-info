@@ -67,7 +67,7 @@ shellcheck:
 	    "bash" \
 	  $(SCRIPT_FILES)
 
-install: install-scripts install-doc install-man
+install: install-npm install-scripts install-doc install-man
 
 install-scripts:
 
@@ -81,7 +81,20 @@ install-scripts:
 install-npm:
 
 	cd \
-	  "$(_PROJECT)/node" &&
+	  "$(_PROJECT)/node"; \
+	make \
+	  "install-npm"
+	$(_INSTALL_DIR) \
+	  "$(BIN_DIR)"
+	ln \
+	  -s \
+	  "$(BIN_DIR)/$(_PROJECT).js"
+	  "$(BIN_DIR)/$(_PROJECT)"
+	$(_INSTALL_DIR) \
+	  "$(LIB_DIR)"
+	$(_INSTALL_EXE) \
+	  "$(_PROJECT)/nodejs/lib$(_PROJECT)" \
+	  "$(LIB_DIR)/$(_PROJECT)-js"
 
 install-doc:
 
