@@ -259,6 +259,8 @@ _db_get(){
     _api_key="${5}" \
     _target_chain="${6}" \
     _filter \
+    _filter_key \
+    _filter_output_type \
     _result \
     _rpcs=() \
     _msg=()
@@ -412,7 +414,6 @@ _evm_chains_info_get() {
       "${_msg[*]}" \
       1
   fi
-
 }
 
 _evm_chains_info_set() {
@@ -545,8 +546,9 @@ _db_path_auto_detect() {
     )
   elif [[ ! -e "${_db_split}" ]]; then
     _msg=(
-      "Default database '${_db_split}'"
-      "not found, trying '${_db}'"
+      "Default per-network"
+      "database '${_db_split}'"
+      "not found, trying '${_db}'."
     )
     _msg_info \
       "${_msg[*]}"
