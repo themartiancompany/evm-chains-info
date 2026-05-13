@@ -26,7 +26,7 @@ Returns information about EVM chains.
 ```bash
   evm-chains-info \
     [options] \
-    <target_chain>
+    <target-chain>
 ```
 
 This program is a dependency for the
@@ -95,6 +95,15 @@ from there by typing
 npm \
   install \
     "evm-chains-info"
+```
+
+# Documentation
+
+The manual can be consulted with
+
+```bash
+man \
+  evm-chains-info
 ```
 
 ## License
