@@ -32,12 +32,16 @@ Returns information about EVM chains.
 This program is a dependency for the
 [EVM Contracts Tools](
   https://github.com/themartiancompany/evm-contracts-tools)
-and it includes a JavaScript library used
-by [libEVM](
-  https://github.com/themartiancompany/libevm).
+and the [EVM Library](
+  https://github.com/themartiancompany/libevm)
+(`libevm`).
 
-It is written and depends on the
+This program has two reference implementation,
+one in Bash using the
 [Crash Bash](
+  https://github.com/themartiancompany/crash-bash)
+library and one in Javascript using the
+[Crash Javascript](
   https://github.com/themartiancompany/crash-bash)
 library.
 
