@@ -73,9 +73,12 @@ ur \
   evm-chains-info
 ```
 
-A censorable HTTP Github mirror of the
+A censorable HTTP Github mirror (
+[`gur`](
+  https://github.com/themartiancompany/gur)
+of the
 [universal recipe](
-  https://github.com/themartiancompany/ur/docs/)
+  https://github.com/themartiancompany/ur/blob/master/docs/UniversalRecipes.md)
 published there is hosted on
 [evm-chains-info-ur](
   https://github.com/themartiancompany/evm-chains-info-ur).
@@ -83,9 +86,10 @@ Be aware it could go offline any time.
 
 The package has also been published
 on the NPM Registry as
-[`evm-chains-info`](
-  https://www.npmjs.com/package/evm-chain-info)
-and so it can be installed from there by typing
+[NPM Registry](
+  https://www.npmjs.com/package/evm-chains-info)
+as `evm-chains-info` and so it can be installed
+from there by typing
 
 ```bash
 npm \
