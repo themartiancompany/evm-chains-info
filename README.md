@@ -80,7 +80,7 @@ of the
 [universal recipe](
   https://github.com/themartiancompany/ur/blob/master/docs/UniversalRecipes.md)
 published there is hosted on
-[evm-chains-info-ur](
+[themartiancompany/evm-chains-info-ur](
   https://github.com/themartiancompany/evm-chains-info-ur).
 Be aware it could go offline any time.
 
