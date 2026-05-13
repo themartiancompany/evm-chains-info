@@ -55,7 +55,7 @@ make \
   install
 ```
 
-It has officially published on the
+It has officially been published on the
 the uncensorable
 [Ur](
   https://github.com/themartiancompany/ur)
