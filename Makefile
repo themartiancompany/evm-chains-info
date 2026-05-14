@@ -89,7 +89,8 @@ install-npm:
 	ln \
 	  -s \
 	  "$(BIN_DIR)/$(_PROJECT).js"
-	  "$(BIN_DIR)/$(_PROJECT)"
+	  "$(BIN_DIR)/$(_PROJECT)" || \
+	true
 	$(_INSTALL_DIR) \
 	  "$(LIB_DIR)"
 	$(_INSTALL_EXE) \
